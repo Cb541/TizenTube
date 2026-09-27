@@ -228,7 +228,47 @@ function customAction(action, parameters) {
             const speed = Number(parameters);
             document.querySelector('video').playbackRate = speed;
             break;
-        case 'ENTER_MP':
+        case 'YTVH_HEIGHT_CYCLE': {
+const video = document.querySelector('video');
+
+let scale = Number(
+    localStorage.getItem('YTVHHeightScale') || '1'
+);
+
+scale = Math.round((scale - 0.05) * 100) / 100;
+
+if (scale < 0.50) {
+    scale = 1.00;
+}
+
+localStorage.setItem(
+    'YTVHHeightScale',
+    String(scale)
+);
+
+if (video) {
+    video.style.setProperty(
+        'transform-origin',
+        '50% 50%',
+        'important'
+    );
+
+    video.style.setProperty(
+        'transform',
+        `scaleY(${scale})`,
+        'important'
+    );
+}
+
+showToast(
+    'Video Height',
+    `${Math.round(scale * 100)}%`
+);
+
+break;
+}
+
+case 'ENTER_MP':
             enablePip();
             break;
         case 'ENTER_PIP':

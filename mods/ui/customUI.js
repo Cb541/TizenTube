@@ -99,6 +99,56 @@ function applyPatches() {
 
         const engagementActionButton = functions.find(func => func.rhs.includes('props.data.engagementActions')).left.split('.')[1];
 
+/*
+ * YTVH: add Video Height directly to YouTube's engagement controls.
+ * Put it immediately before Like when Like can be identified.
+ */
+if (engagementActionButton) {
+    const origHeightActionButton = inst[engagementActionButton];
+
+    inst[engagementActionButton] = function () {
+        const res = origHeightActionButton.apply(this, arguments);
+
+        if (!res.find(item =>
+            item.type === 'TRANSPORT_CONTROLS_BUTTON_TYPE_YTVH_HEIGHT')) {
+
+            const heightButton = {
+                type: 'TRANSPORT_CONTROLS_BUTTON_TYPE_YTVH_HEIGHT',
+                button: {
+                    buttonRenderer: ButtonRenderer(
+                        false,
+                        'Height',
+                        'SLOW_MOTION_VIDEO',
+                        {
+                            customAction: {
+                                action: 'YTVH_HEIGHT_CYCLE'
+                            }
+                        }
+                    )
+                }
+            };
+
+            const likeIndex = res.findIndex(item => {
+                const type = String(item?.type || '');
+                return type.includes('LIKE') &&
+                       !type.includes('DISLIKE');
+            });
+
+            if (likeIndex >= 0) {
+                res.splice(likeIndex, 0, heightButton);
+            } else {
+                /*
+                 * Fallback: still make the button visible if this YouTube
+                 * version uses a different name for Like.
+                 */
+                res.unshift(heightButton);
+            }
+        }
+
+        return res;
+    };
+}
+
         if (engagementActionButton && configRead('enableSpeedControlsButton')) {
             const origEngagementActionButton = inst[engagementActionButton];
             inst[engagementActionButton] = function () {
